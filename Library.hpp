@@ -54,6 +54,7 @@ private:
 			return (*__ret)(args...);
 		}
 
+	private:
 		HMODULE m_lib;
 		const char *m_func;
 	};
