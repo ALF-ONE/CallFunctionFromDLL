@@ -75,7 +75,7 @@ public:
 	}
 
 	template<typename Ret>
-	_call<Ret> call(const char *func) {
+	inline _call<Ret> call(const char *func) {
 		return _call<Ret>(m_hLibrary, func);
 	}
 
