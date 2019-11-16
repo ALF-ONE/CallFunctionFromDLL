@@ -32,20 +32,20 @@
 class CLibrary
 {
 private:
-	HMODULE m_hLibrary = nullptr;
-	bool m_bLoad = false;
+	HMODULE m_hLibrary;
+	bool m_bLoad;
 
 	template<typename Ret>
 	struct _call
 	{
-		_call(HMODULE lib, const char *func) : m_lib(lib), m_func(func) {}
+		_call(HMODULE hLib, const char *szFunc) : m_hLib(hLib), m_szFunc(szFunc) {}
 
 		template<typename... Args>
 		auto arguments(Args... args) -> Ret
 		{
-			if (!m_lib) return Ret(NULL);
+			if (!m_hLib || !m_szFunc) return Ret(NULL);
 
-			FARPROC address = GetProcAddress(m_lib, m_func);
+			FARPROC address = GetProcAddress(m_hLib, m_szFunc);
 			if (!address) return Ret(NULL);
 
 			typedef Ret(__stdcall *_fn)(Args...);
@@ -55,45 +55,46 @@ private:
 		}
 
 	private:
-		HMODULE m_lib;
-		const char *m_func;
+		HMODULE m_hLib;
+		const char *m_szFunc;
 	};
 
 public:
-	CLibrary(const char *lib)
+	explicit CLibrary(const char *szLib)
 	{
-		m_hLibrary = GetModuleHandle(lib);
+		m_hLibrary = GetModuleHandle(szLib);
 		if (!m_hLibrary)
 		{
-			m_hLibrary = LoadLibrary(lib);
+			m_hLibrary = LoadLibrary(szLib);
 			m_bLoad = true;
 		}
 	}
 	~CLibrary() {
 		if (m_hLibrary && m_bLoad) FreeLibrary(m_hLibrary);
-		m_hLibrary = nullptr;
 	}
 
 	template<typename Ret>
-	inline _call<Ret> call(const char *func) {
-		return _call<Ret>(m_hLibrary, func);
+	inline _call<Ret> call(const char *szFunc) {
+		return _call<Ret>(m_hLibrary, szFunc);
 	}
 
 	template<typename Ret, typename... Args>
-	static auto call(const char *lib, const char *func, Args... args) -> Ret
+	static auto call(const char *szLib, const char *szFunc, Args... args) -> Ret
 	{
+		if (!szLib || !szFunc) return Ret(NULL);
+
 		bool bLoad = false;
-		HMODULE hLib = GetModuleHandle(lib);
+		HMODULE hLib = GetModuleHandle(szLib);
 
 		if (!hLib)
 		{
-			hLib = LoadLibrary(lib);
+			hLib = LoadLibrary(szLib);
 			if (!hLib) return Ret(NULL);
 
 			bLoad = true;
 		}
 
-		FARPROC address = GetProcAddress(hLib, func);
+		FARPROC address = GetProcAddress(hLib, szFunc);
 		if (!address) {
 			FreeLibrary(hLib);
 			return Ret(NULL);
