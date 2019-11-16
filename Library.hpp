@@ -48,10 +48,7 @@ private:
 			FARPROC address = GetProcAddress(m_hLib, m_szFunc);
 			if (!address) return Ret(NULL);
 
-			typedef Ret(__stdcall *_fn)(Args...);
-			_fn __ret = reinterpret_cast<_fn>(address);
-
-			return (*__ret)(args...);
+			return (*reinterpret_cast<Ret(__stdcall *)(Args...)>(address))(args...);
 		}
 
 	private:
@@ -100,12 +97,10 @@ public:
 			return Ret(NULL);
 		}
 
-		typedef Ret(__stdcall *_fn)(Args...);
-		_fn __ret = reinterpret_cast<_fn>(address);
-
+		Ret __ret = (*reinterpret_cast<Ret(__stdcall *)(Args...)>(address))(args...);
 		if (bLoad) FreeLibrary(hLib);
 
-		return (*__ret)(args...);
+		return __ret;
 	}
 };
 
