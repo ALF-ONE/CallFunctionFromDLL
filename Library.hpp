@@ -38,7 +38,7 @@ private:
 	template<typename Ret>
 	struct _call
 	{
-		_call(HMODULE hLib, const char *szFunc) : m_hLib(hLib), m_szFunc(szFunc) {}
+		_call(HMODULE hLib, const char* szFunc) : m_hLib(hLib), m_szFunc(szFunc) {}
 
 		template<typename... Args>
 		auto arguments(Args... args) -> Ret
@@ -48,16 +48,16 @@ private:
 			FARPROC address = GetProcAddress(m_hLib, m_szFunc);
 			if (!address) return Ret(NULL);
 
-			return (*reinterpret_cast<Ret(__stdcall *)(Args...)>(address))(args...);
+			return (*reinterpret_cast<Ret(__stdcall*)(Args...)>(address))(args...);
 		}
 
 	private:
 		HMODULE m_hLib;
-		const char *m_szFunc;
+		const char* m_szFunc;
 	};
 
 public:
-	explicit CLibrary(const char *szLib)
+	explicit CLibrary(const char* szLib) : m_hLibrary(nullptr), m_bLoad(false)
 	{
 		m_hLibrary = GetModuleHandle(szLib);
 		if (!m_hLibrary)
@@ -71,12 +71,12 @@ public:
 	}
 
 	template<typename Ret>
-	inline _call<Ret> call(const char *szFunc) {
+	inline _call<Ret> call(const char* szFunc) {
 		return _call<Ret>(m_hLibrary, szFunc);
 	}
 
 	template<typename Ret, typename... Args>
-	static auto call(const char *szLib, const char *szFunc, Args... args) -> Ret
+	static auto call(const char* szLib, const char* szFunc, Args... args) -> Ret
 	{
 		if (!szLib || !szFunc) return Ret(NULL);
 
@@ -97,7 +97,7 @@ public:
 			return Ret(NULL);
 		}
 
-		Ret __ret = (*reinterpret_cast<Ret(__stdcall *)(Args...)>(address))(args...);
+		Ret __ret = (*reinterpret_cast<Ret(__stdcall*)(Args...)>(address))(args...);
 		if (bLoad) FreeLibrary(hLib);
 
 		return __ret;
